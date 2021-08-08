@@ -61,6 +61,10 @@ const SendButton = styled.div`
   .MuiSvgIcon-root {
     width: 18px;
   }
+
+  :hover {
+    background: #148567;
+  }
 `
 
 const Send = styled(SendIcon)`
