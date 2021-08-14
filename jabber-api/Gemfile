@@ -12,6 +12,7 @@ gem 'puma', '~> 5.0'
 
 #Devise for authentication
 gem 'devise'
+gem 'devise-jwt'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
 # Use Redis adapter to run Action Cable in production
@@ -26,7 +27,8 @@ gem 'devise'
 gem 'bootsnap', '>= 1.4.4', require: false
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
-# gem 'rack-cors'
+gem 'rack-cors'
+gem 'jsonapi-rails'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
@@ -45,6 +47,7 @@ group :test do
   gem 'shoulda-matchers'
   gem 'faker'
   gem 'database_cleaner'
+  gem 'jsonapi-rspec'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
