@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import Chat from './components/Chat'
 import Login from './components/Login'
+import Signup from './components/Signup'
 import styled from 'styled-components'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
@@ -13,6 +14,7 @@ function App() {
 
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')))
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'
 
   const getChannels = () => {
     db.collection('rooms').onSnapshot((snapshot) => {
@@ -23,9 +25,19 @@ function App() {
   }
 
   const signOut = () => {
-    auth.signOut().then(() => {
-      localStorage.removeItem('user')
-      setUser(null)
+    fetch(API_BASE_URL + "/logout", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": user.token
+      }
+    })
+    .then((response) => {
+      if(response.ok) {
+        localStorage.removeItem('user')
+        setUser(null)
+      }
     })
   }
 
@@ -38,7 +50,17 @@ function App() {
       <Router>
         {
           !user ?
-          <Login setUser={setUser} />
+          <Switch>
+            <Route path="/forgot">
+              <Signup setUser={setUser} apiBaseUrl={API_BASE_URL} />
+            </Route>
+            <Route path="/signup">
+              <Signup setUser={setUser} apiBaseUrl={API_BASE_URL} />
+            </Route>
+            <Route path="/">
+              <Login setUser={setUser} apiBaseUrl={API_BASE_URL} />
+            </Route>
+          </Switch>
           :
           <Container>
             <Header signOut={signOut} user={user} />

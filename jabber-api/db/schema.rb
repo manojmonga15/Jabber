@@ -10,12 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_13_184704) do
+ActiveRecord::Schema.define(version: 2021_08_18_173306) do
+
+  create_table "channels", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "desc"
+    t.boolean "private", default: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.integer "created_by"
+  end
 
   create_table "jwt_denylist", force: :cascade do |t|
     t.string "jti", null: false
-    t.datetime "expired_at", null: false
+    t.datetime "exp", null: false
     t.index ["jti"], name: "index_jwt_denylist_on_jti"
+  end
+
+  create_table "memberships", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "channel_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["channel_id"], name: "index_memberships_on_channel_id"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -28,8 +46,11 @@ ActiveRecord::Schema.define(version: 2021_08_13_184704) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "image"
     t.text "bio"
+    t.string "name"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "memberships", "channels"
+  add_foreign_key "memberships", "users"
 end

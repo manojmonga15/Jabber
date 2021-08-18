@@ -5,6 +5,8 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
 
-  #validates :username, uniqueness: {case_sensitive: false}, presence: true, allow_blank: false, format: {with: /\A[a-zA-Z0-9]+\z/}
+  has_many :memberships
+  has_many :channels, through: :memberships
+  #has_many :created_channels, class: :Channel
 
 end
