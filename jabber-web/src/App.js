@@ -81,7 +81,7 @@ function App(props) {
           </Switch>
           :
           <Container>
-            <Header signOut={signOut} user={user} />
+            <Header signOut={signOut} user={user} apiBaseUrl={API_BASE_URL} setUser={setUser} />
             <Main>
               <Sidebar rooms={rooms} apiBaseUrl={API_BASE_URL} user={user} />
               <Switch>

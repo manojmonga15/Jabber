@@ -2,17 +2,24 @@ import React, {useState} from 'react'
 import styled from 'styled-components'
 import AccessTimeIcon from '@material-ui/icons/AccessTime';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import {DropdownButton, Dropdown} from 'react-bootstrap'
+import {Dropdown, Modal, Form, Image, Button} from 'react-bootstrap'
+import { Link } from "react-router-dom";
 
-function Header({user, signOut}) {
+function Header({user, signOut, apiBaseUrl, setUser}) {
+  const [profileModalShow, setProfileModalShow] = useState(false)
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [name, setName] = useState(user.name)
+  const [status, setStatus] = useState(user.bio)
+  const [avatarURL, setAvatarURL] = useState(user.photo)
+
   const CustomToggle = React.forwardRef(({ children, onClick }, ref) => (
     <a
       class="custom-toggle"
       href=""
       ref={ref}
       onClick={(e) => {
-        e.preventDefault();
-        onClick(e);
+        e.preventDefault()
+        onClick(e)
       }}
     >
       {children}
@@ -20,8 +27,45 @@ function Header({user, signOut}) {
     </a>
   ))
 
-  // Dropdown needs access to the DOM of the Menu to measure it
+  const updateProfile = (e) => {
+    e.preventDefault()
+    const formData = new FormData()
+    formData.append('user[name]', name)
+    formData.append('user[bio]', status)
+    formData.append('user[avatar]', avatarFile)
+    fetch(apiBaseUrl + "/users/" + user.id, {
+      method: "PUT",
+      headers: {
+        "Authorization": user.token
+      },
+      body: formData
+    })
+    .then((response) => {
+      if(response.ok) {
+        response.json()
+        .then((json) => {
+          //console.log(JSON.parseJSON(data))
+          console.log(json.data.attributes)
+          setProfileModalShow(false)
 
+          const newUser = {
+            id: json.data.id,
+            email: json.data.attributes.email,
+            name: json.data.attributes.name,
+            photo: json.data.attributes.avatar,
+            bio: json.data.attributes.bio,
+            token: response.headers.get('Authorization')
+          }
+
+          setUser(newUser)
+          localStorage.setItem('user', JSON.stringify(newUser))
+        })
+      }
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+  }
 
   return (
     <Container>
@@ -40,18 +84,80 @@ function Header({user, signOut}) {
           <Name>
             {user.name}
           </Name>
-          <Avatar>
-            <img src={user.photo ? user.photo : "https://i.imgur.com/6VBx3io.png"} alt="Avatar" />
-          </Avatar>
+          <Profile>
+            <img src={user.photo ? user.photo : "https://i.imgur.com/6VBx3io.png"} alt="Profile" />
+          </Profile>
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-          <Dropdown.Item eventKey="1">Profile</Dropdown.Item>
-          <Dropdown.Item eventKey="2">Change Avatar</Dropdown.Item>
+          <Link to="/profile" className="dropdown-item">View Profile</Link>
+          <Dropdown.Item eventKey="2" onClick={() => setProfileModalShow(true)}>Edit Profile</Dropdown.Item>
           <Dropdown.Divider />
-          <Dropdown.Item eventKey="3" onClick={signOut}>Logout</Dropdown.Item>
+          <Dropdown.Item eventKey="3" onClick={signOut}>Sign out of Jabber</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
+
+      <Modal
+          show={profileModalShow}
+          onHide={() => setProfileModalShow(false)}
+          size="lg"
+          aria-labelledby="contained-modal-title-vcenter"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title id="contained-modal-title-vcenter">
+              Edit your profile
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <ModalContainer>
+                <Form.Group class="profile-form-group">
+                  <Form.Group className="mb-3" >
+                    <Form.Label>Full name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={name}
+                      placeholder="Full name"
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3"  >
+                    <Form.Label>Status</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={status}
+                      placeholder="Enter your status"
+                      onChange={(e) => setStatus(e.target.value)}
+                    />
+                  </Form.Group>
+                </Form.Group>
+
+                <Form.Group className="avatar-group">
+                  <Image src={avatarURL} thumbnail />
+                  <Form.Group controlId="formFile" className="mb-3">
+                    <Form.Control
+                      type="file"
+                      accept="image/*"
+                      multiple={false}
+                      onChange={(e) => {
+                        setAvatarURL(URL.createObjectURL(e.target.files[0]))
+                        setAvatarFile(e.target.files[0])
+                      }}
+                    />
+                  </Form.Group>
+                </Form.Group>
+              </ModalContainer>
+            </Form>
+
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={() => setProfileModalShow(false)}>Close</Button>
+            <Button variant="primary" type="submit" onClick={(e) => updateProfile(e)}>
+              Save Profile
+            </Button>
+          </Modal.Footer>
+        </Modal>
     </Container>
   )
 }
@@ -122,7 +228,7 @@ const Name = styled.div`
   padding-right: 16px;
 `
 
-const Avatar = styled.div`
+const Profile = styled.div`
   width: 28px;
   height: 28px;
   border: 2px solid white;
@@ -132,4 +238,28 @@ const Avatar = styled.div`
   img {
     width: 100%;
   }
+`
+
+const ModalContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .profile-form-group {
+    width: 55%;
+  }
+
+  .avatar-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
+
+    img {
+      width: 150px;
+      height: 150px;
+    }
+  }
+
 `

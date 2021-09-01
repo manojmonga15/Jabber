@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
+  default_url_options :host => "localhost:3001"
   mount ActionCable.server => '/cable'
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
-      resources :users, only: [:show]
+      resources :users, only: [:show, :update]
       resources :channels, only: [:create, :show, :index] do
         get :messages, on: :member
       end

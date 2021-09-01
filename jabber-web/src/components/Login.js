@@ -33,7 +33,7 @@ function Login({setUser, apiBaseUrl}) {
             id: json.data.id,
             email: json.data.attributes.email,
             name: json.data.attributes.name,
-            photo: json.data.attributes.image,
+            photo: json.data.attributes.avatar,
             bio: json.data.attributes.bio,
             token: response.headers.get('Authorization')
           }
