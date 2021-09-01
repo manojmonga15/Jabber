@@ -1,22 +1,45 @@
-import React from 'react'
+import React, {useState} from 'react'
 import styled from 'styled-components'
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import { sidebarItems } from '../data/SidebarData'
 import AddIcon from '@material-ui/icons/Add';
-import db from '../firebase'
 import {useHistory} from 'react-router-dom'
+import { Form, Button, Modal } from 'react-bootstrap';
 
 function Siderbar(props) {
 
   const history = useHistory()
+  const [modalShow, setModalShow] = useState(false);
+  const [title, setTitle] = useState("")
+  const [desc, setDesc] = useState("")
+  const [isPrivate, setIsPrivate] = useState(false)
 
-  const addChannel = () => {
-      const promptName = prompt("Enter channel name");
-      if(promptName) {
-        db.collection('rooms').add({
-          name: promptName
-        })
+  const addChannel = (e) => {
+    e.preventDefault()
+    fetch(props.apiBaseUrl + "/channels", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": props.user.token
+      },
+      body: JSON.stringify({
+        channel: {
+          title: title,
+          desc: desc,
+          private: isPrivate
+        }
+      })
+    })
+    .then((response) => {
+      if(response.ok) {
+        setTitle("")
+        setDesc("")
+        setIsPrivate(false)
+        setModalShow(false)
+        alert("Channel Added!")
       }
+    })
   }
 
   const goToChannel = (id) => {
@@ -52,7 +75,7 @@ function Siderbar(props) {
           <div>
             Channels
           </div>
-          <AddIcon onClick={addChannel} />
+          <AddIcon onClick={() => setModalShow(true)} />
         </NewChannelContainer>
         <ChannelsList>
           {
@@ -64,6 +87,41 @@ function Siderbar(props) {
           }
         </ChannelsList>
       </ChannelsContainer>
+      <Form>
+        <Modal
+            show={modalShow}
+            onHide={() => setModalShow(false)}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title id="contained-modal-title-vcenter">
+                Create Channel
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group className="mb-3" controlId="formBasicTitle">
+                <Form.Label>Title</Form.Label>
+                <Form.Control type="text" placeholder="Enter Channel Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formBasicDesc">
+                <Form.Label>Description</Form.Label>
+                <Form.Control type="text" placeholder="Few words to describe your channel." value={desc} onChange={(e) => setDesc(e.target.value)} />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formBasicPrivate">
+                <Form.Check type="checkbox" label="Private" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button onClick={() => setModalShow(false)}>Close</Button>
+              <Button variant="primary" type="submit" onClick={(e) => addChannel(e)}>
+                Create
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </Form>
     </Container>
   )
 }

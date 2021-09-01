@@ -3,58 +3,122 @@ import styled from 'styled-components'
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import ChatInput from './ChatInput'
 import ChatMessage from './ChatMessage'
-import db from '../firebase'
 import {useParams} from 'react-router-dom'
-import firebase from 'firebase'
 
-function Chat({user}) {
+function Chat({user, apiBaseUrl, cable}) {
 
-  let {channelId} = useParams();
-  const [channel, setChannel] = useState([]);
+  let {channelId} = useParams()
+  const [channel, setChannel] = useState([])
   const [messages, setMessages] = useState([])
+  const [chats, setChats] = useState([])
+  const [msgReactions, setMsgReactions] = useState([])
 
-  const getMessages = (channelId) => {
-    db.collection('rooms')
-    .doc(channelId)
-    .collection('messages')
-    .orderBy('timestamp', 'asc')
-    .onSnapshot((snapshot) => {
-      let msgs = snapshot.docs.map((doc) => doc.data())
-      console.log(msgs)
-      setMessages(msgs)
-    })
+  const createSocket = (channelId) => {
+    setChats(cable.subscriptions.create(
+      {
+        channel: "MessagesChannel",
+        messageable_id: channelId //this will be sent to messages_channel's params
+      },
+      {
+        connected: () => {
+          console.log("CONNECTED!");
+        },
+        disconnected: () => {
+          console.log("---DISCONNECTED---");
+        },
+        received: (data) => {
+          console.log(data.data)
+          updateMessages(data.data)
+        }
+      }
+    ));
+  }
+
+  const updateMessages = (message) => {
+    let messageLog = messages
+    console.log(messages)
+    messageLog.push(message)
+    setMessages(messageLog)
   }
 
   const sendMessage = (text) => {
     if(channelId) {
       let payload = {
-        text: text,
-        timestamp: firebase.firestore.Timestamp.now(),
-        user: user.name,
-        userImage: user.photo
+        body: text,
+        messageable_id: channelId,
+        messageable_type: 'Channel'
       }
 
-      db.collection("rooms")
-      .doc(channelId)
-      .collection("messages")
-      .add(payload)
-
-      console.log(payload);
+      fetch(apiBaseUrl + "/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": user.token
+        },
+        body: JSON.stringify(payload)
+      })
+      .catch((error) => {
+        alert(error.message)
+      })
     }
   }
 
+  const getMessages = (channelId) => {
+    fetch(apiBaseUrl + "/channels/" + channelId + "/messages?include=reaction_counts", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": user.token
+      }
+    })
+    .then((response) => {
+      if(response.ok) {
+        response.json()
+        .then((json) => {
+          let msgsData = json.data
+
+          setMessages(json.data)
+
+          if('included' in json) {
+            console.log(json)
+            console.log(json.included)
+            setMsgReactions(json.included)
+          }
+          console.log(msgReactions)
+        })
+
+      }
+    })
+  }
+
   const getChannel = (channelId) => {
-    db.collection('rooms')
-    .doc(channelId)
-    .onSnapshot((snapshot) => {
-      console.log(snapshot.data());
-      setChannel(snapshot.data())
+    fetch(apiBaseUrl + "/channels/" + channelId, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": user.token
+      }
+    })
+    .then((response) => {
+      if(response.ok) {
+        response.json()
+        .then((json) => {
+          setChannel({id: json.data.id, name: json.data.attributes.title, desc: json.data.attributes.desc, private: json.data.attributes.private})
+          getMessages(channelId)
+        })
+      }
+    })
+    .catch((error) => {
+      alert(error.message)
     })
   }
 
   useEffect(() => {
     getChannel(channelId)
-    getMessages(channelId)
+    createSocket(channelId)
   }, [channelId]);
 
   return (
@@ -65,7 +129,7 @@ function Chat({user}) {
             # {channel.name}
           </ChannelName>
           <ChannelDesc>
-            Some description about the channel.
+            {channel.desc || "Some description about the channel."}
           </ChannelDesc>
         </Channel>
         <Details>
@@ -79,10 +143,15 @@ function Chat({user}) {
           messages.length > 0 &&
           messages.map((data, index) => {
             return <ChatMessage
-              text={data.text}
-              name={data.user}
-              image={data.userImage}
-              timestamp={data.timestamp}
+              id={data.id}
+              text={data.attributes.body}
+              name={data.attributes.author_name}
+              image={data.attributes.author_avatar}
+              timestamp={data.attributes.timestamp}
+              apiBaseUrl={apiBaseUrl}
+              user={user}
+              cable={cable}
+              reactionsData={msgReactions.filter((reaction) => reaction.attributes.message_id.toString() === data.id.toString())}
             />
           })
         }

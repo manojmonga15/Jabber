@@ -16,13 +16,23 @@ function Header({user, signOut}) {
         <HelpOutlineIcon />
       </Main>
 
-      <UserContainer>
-        <Name>
-          {user.name}
-        </Name>
-        <Avatar onClick={signOut}>
-          <img src={user.photo ? user.photo : "https://i.imgur.com/6VBx3io.png"} alt="Avatar" />
-        </Avatar>
+      <UserContainer className="nav">
+        <NavItem className="nav-item dropdown">
+          <UserNav className="nav-link dropdown-toggle">
+            <Name>
+              {user.name}
+            </Name>
+            <Avatar onClick={signOut}>
+              <img src={user.photo ? user.photo : "https://i.imgur.com/6VBx3io.png"} alt="Avatar" />
+            </Avatar>
+          </UserNav>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><a class="dropdown-item" href="#">Change Avatar</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="#">Logout</a></li>
+          </ul>
+        </NavItem>
       </UserContainer>
     </Container>
   )
@@ -73,13 +83,20 @@ const Search = styled.div`
   }
 `
 
-const UserContainer = styled.div`
-  display: flex;
-  align-items: center;
-  padding-right: 16px;
+const UserContainer = styled.ul`
   position: absolute;
   right: 0;
 `
+const NavItem = styled.li`
+
+`
+
+const UserNav = styled.div`
+display: flex;
+align-items: center;
+padding-right: 16px;
+`
+
 const Name = styled.div`
   padding-right: 16px;
 `

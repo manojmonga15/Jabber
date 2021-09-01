@@ -1,12 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import actioncable from 'actioncable';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const CableApp = {}
+CableApp.cable = actioncable.createConsumer('ws://localhost:3001/cable')
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+      <App cable={CableApp.cable} />
   </React.StrictMode>,
   document.getElementById('root')
 );

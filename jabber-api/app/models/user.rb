@@ -7,6 +7,8 @@ class User < ApplicationRecord
 
   has_many :memberships
   has_many :channels, through: :memberships
-  #has_many :created_channels, class: :Channel
-
+  has_many :owned_channels, class_name: 'Channel', foreign_key: :created_by
+  has_many :messages, dependent: :destroy
+  has_many :reactions, dependent: :destroy
+  has_one_attached :avatar
 end

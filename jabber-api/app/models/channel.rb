@@ -1,7 +1,8 @@
 class Channel < ApplicationRecord
   has_many :memberships
   has_many :users, through: :memberships
-  belongs_to :owner, class: :User, foreign_key: :created_by
+  belongs_to :owner, class_name: 'User', foreign_key: :created_by
+  has_many :messages, as: :messageable
 
-  validates :users, :title, presence: true
+  validates :title, presence: true
 end

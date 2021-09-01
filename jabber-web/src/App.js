@@ -10,17 +10,34 @@ import Sidebar from './components/Sidebar'
 import db from './firebase'
 import {auth, provider} from './firebase'
 
-function App() {
+function App(props) {
 
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')))
+  const [message, setMessage] = useState()
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'
 
   const getChannels = () => {
-    db.collection('rooms').onSnapshot((snapshot) => {
-      setRooms(snapshot.docs.map((doc) => {
-        return {id: doc.id, name: doc.data().name }
-      }))
+    fetch(API_BASE_URL + "/channels", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": user.token
+      }
+    })
+    .then((response) => {
+      if(response.ok) {
+        response.json()
+        .then((json) => {
+          setRooms(json.data.map((doc) => {
+            return {id: doc.id, name: doc.attributes.title, private: doc.attributes.private}
+          }))
+        })
+      }
+    })
+    .catch((error) => {
+      alert(error.message)
     })
   }
 
@@ -42,7 +59,8 @@ function App() {
   }
 
   useEffect(() => {
-    getChannels();
+    if(user)
+      getChannels();
   }, [])
 
   return (
@@ -65,10 +83,10 @@ function App() {
           <Container>
             <Header signOut={signOut} user={user} />
             <Main>
-              <Sidebar rooms={rooms} />
+              <Sidebar rooms={rooms} apiBaseUrl={API_BASE_URL} user={user} />
               <Switch>
                 <Route path="/room/:channelId">
-                  <Chat user={user} />
+                  <Chat user={user} apiBaseUrl={API_BASE_URL} cable={props.cable} />
                 </Route>
                 <Route path="/">
                   Select or Create Channel
