@@ -41,12 +41,12 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
     setSelectedReactions(reaction)
   }
 
-  const AddReactionsToMessage = (emoji) => {
+  const ToggleReaction = (emoji) => {
     setReactionShown(false)
-    let emoji_colons = emoji.colons
+    let emojiColons = emoji.colons
 
     let payload = {
-      emoji: emoji_colons
+      emoji: emojiColons
     }
 
     fetch(apiBaseUrl + "/messages/" + id + "/reactions", {
@@ -76,7 +76,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
   return (
     <Container>
       <UserAvatar>
-        <img src={image ? image : "https://randomuser.me/api/portraits/women/26.jpg"} />
+        <img src={image ? image : "https://i.imgur.com/6VBx3io.png"} />
       </UserAvatar>
 
       <ChatContent>
@@ -91,7 +91,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
         {
           selectedReactions.map((reaction) => {
             return <EmojiCounter>
-                      <Emoji emoji={reaction.attributes.emoji} size={16} />
+                      <Emoji emoji={reaction.attributes.emoji} size={16} onClick={(emoji, event) => {ToggleReaction(emoji)}} />
                       <Count>{reaction.attributes.count}</Count>
                    </EmojiCounter>
           })
@@ -100,9 +100,9 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
       </ChatContent>
 
       <MessageActions className={"msg-action-box"}>
-        <Emoji emoji={'white_check_mark'} size={16} onClick={(emoji, event) => {AddReactionsToMessage(emoji)}} />
-        <Emoji emoji={'eyes'} size={16} onClick={(emoji, event) => {AddReactionsToMessage(emoji)}} />
-        <Emoji emoji={'raised_hands'} size={16} onClick={(emoji, event) => {AddReactionsToMessage(emoji)}} />
+        <Emoji emoji={'white_check_mark'} size={16} onClick={(emoji, event) => {ToggleReaction(emoji)}} />
+        <Emoji emoji={'eyes'} size={16} onClick={(emoji, event) => {ToggleReaction(emoji)}} />
+        <Emoji emoji={'raised_hands'} size={16} onClick={(emoji, event) => {ToggleReaction(emoji)}} />
         <ChooseReaction className={"reaction-box"} onClick={(e) => {setReactionShown(!reactionShown)}}>
           <InsertEmoticonIcon />
           <span>
@@ -124,7 +124,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
             <div className="reactions">
               <Picker
                 showSkinTones={false}
-                onSelect={(emoji) => {AddReactionsToMessage(emoji)}}
+                onSelect={(emoji) => {ToggleReaction(emoji)}}
               />
             </div>
           }
@@ -185,7 +185,7 @@ const Reactions = styled.span`
   display: flex;
   flex-direction: row;
 
-  span {
+  span, button {
     vertical-align: middle;
   }
 `

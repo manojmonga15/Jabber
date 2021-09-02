@@ -8,9 +8,15 @@ class Api::V1::ReactionsController < ApplicationController
   end
 
   def create
-    @reaction = @message.reactions.build reaction_params
-    @reaction.user_id = current_user.id
-    @reaction.save
+    @reaction = @message.reactions.find_by user_id: current_user.id, emoji: reaction_params[:emoji]
+
+    if @reaction
+      @reaction.destroy
+    else
+      @reaction = @message.reactions.build reaction_params
+      @reaction.user_id = current_user.id
+      @reaction.save
+    end
 
     render_jsonapi_response @reaction
   end

@@ -10,14 +10,15 @@ class Reaction < ApplicationRecord
               .group('reactions.emoji, reactions.message_id')
             }
 
-  after_create_commit do
-    ActionCable.server.broadcast "message-#{message_id}:reactions", build_broadcast_response
-  end
+  # after_create_commit do
+  #
+  # end
+
+  after_commit :broadcast_response, on: [:create, :destroy]
 
   private
-  def build_broadcast_response
+  def broadcast_response
     reactions = []
-    puts message.reaction_counts
 
     message.reaction_counts.each do |react|
       reactions << {
@@ -31,6 +32,7 @@ class Reaction < ApplicationRecord
           }
         }
     end
-    reactions
+
+    ActionCable.server.broadcast "message-#{message_id}:reactions", reactions
   end
 end

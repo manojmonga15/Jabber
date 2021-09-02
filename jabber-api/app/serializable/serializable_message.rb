@@ -10,7 +10,9 @@ class SerializableMessage < JSONAPI::Serializable::Resource
     @object.author.name
   end
   attribute :author_avatar do
-    @object.author.image
+    if @object.author.avatar.attached?
+      @url_helpers.rails_blob_url @object.author.avatar
+    end
   end
 
   has_many :reaction_counts
