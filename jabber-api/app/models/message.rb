@@ -6,7 +6,7 @@ class Message < ApplicationRecord
             -> {
                   joins(:user)
                   .select("reactions.emoji, reactions.message_id, COUNT(reactions.emoji) as count,
-                    GROUP_CONCAT(users.id || ',' || users.name, ';') as users")
+                    STRING_AGG(users.id || ',' || users.name, ';') as users")
                   .group('reactions.emoji, reactions.message_id')
                 },
             class_name: :Reaction
@@ -29,9 +29,14 @@ class Message < ApplicationRecord
           messageable_id: messageable_id,
           messageable_type: messageable_type,
           author_name: author.name,
-          author_avatar: author.image
+          author_avatar:  author_avatar
         }
       }
     }
+  end
+
+  def author_avatar
+    author.avatar.attached? ?
+      Rails.application.routes.url_helpers.rails_blob_url(author.avatar) : ""
   end
 end

@@ -12,11 +12,14 @@
 
 ActiveRecord::Schema.define(version: 2021_08_31_173649) do
 
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
-    t.integer "record_id", null: false
-    t.integer "blob_id", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
@@ -35,7 +38,7 @@ ActiveRecord::Schema.define(version: 2021_08_31_173649) do
   end
 
   create_table "active_storage_variant_records", force: :cascade do |t|
-    t.integer "blob_id", null: false
+    t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
@@ -56,8 +59,8 @@ ActiveRecord::Schema.define(version: 2021_08_31_173649) do
   end
 
   create_table "memberships", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "channel_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "channel_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["channel_id"], name: "index_memberships_on_channel_id"
@@ -66,7 +69,7 @@ ActiveRecord::Schema.define(version: 2021_08_31_173649) do
 
   create_table "messages", force: :cascade do |t|
     t.text "body"
-    t.integer "author_id", null: false
+    t.bigint "author_id", null: false
     t.string "messageable_type"
     t.integer "messageable_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -76,8 +79,8 @@ ActiveRecord::Schema.define(version: 2021_08_31_173649) do
 
   create_table "reactions", force: :cascade do |t|
     t.string "emoji"
-    t.integer "message_id", null: false
-    t.integer "user_id", null: false
+    t.bigint "message_id", null: false
+    t.bigint "user_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["message_id"], name: "index_reactions_on_message_id"

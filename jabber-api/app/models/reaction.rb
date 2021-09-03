@@ -6,7 +6,7 @@ class Reaction < ApplicationRecord
         -> {
               joins(:user)
               .select("reactions.emoji, reactions.message_id, COUNT(reactions.emoji) as count,
-                GROUP_CONCAT(users.id || ',' || users.name, ';') as users")
+                STRING_AGG(users.id || ',' || users.name, ';') as users")
               .group('reactions.emoji, reactions.message_id')
             }
 

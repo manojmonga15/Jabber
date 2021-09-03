@@ -61,7 +61,7 @@ function Siderbar(props) {
       <MainChannels>
         {
           sidebarItems.map(item => (
-            <MainChannelItem>
+            <MainChannelItem key={"sidebar_" + item.id}>
               {item.icon}
               {item.text}
             </MainChannelItem>
@@ -80,7 +80,7 @@ function Siderbar(props) {
         <ChannelsList>
           {
             props.rooms.map(item => (
-              <Channel onClick={() => goToChannel(item.id)}>
+              <Channel key={"channels_" + item.id} onClick={() => goToChannel(item.id)}>
                 # {item.name}
               </Channel>
             ))

@@ -7,14 +7,12 @@ import Signup from './components/Signup'
 import styled from 'styled-components'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
-import db from './firebase'
-import {auth, provider} from './firebase'
 
 function App(props) {
 
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')))
-  const [message, setMessage] = useState()
+  //const [message, setMessage] = useState()
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'
 
   const getChannels = () => {

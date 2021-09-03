@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import styled from 'styled-components'
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import ChatInput from './ChatInput'
@@ -12,6 +12,7 @@ function Chat({user, apiBaseUrl, cable}) {
   const [messages, setMessages] = useState([])
   const [chats, setChats] = useState([])
   const [msgReactions, setMsgReactions] = useState([])
+  const messagesEndRef = useRef(null)
 
   const createSocket = (channelId) => {
     setChats(cable.subscriptions.create(
@@ -27,7 +28,6 @@ function Chat({user, apiBaseUrl, cable}) {
           console.log("---DISCONNECTED---");
         },
         received: (data) => {
-          console.log(data.data)
           updateMessages(data.data)
         }
       }
@@ -37,7 +37,9 @@ function Chat({user, apiBaseUrl, cable}) {
   const updateMessages = (message) => {
     let messageLog = messages
     console.log(messages)
-    messageLog.push(message)
+    console.log(message)
+    if(!messageLog.some((item) => item.id === message.id))
+      messageLog.push(message)
     setMessages(messageLog)
   }
 
@@ -77,15 +79,14 @@ function Chat({user, apiBaseUrl, cable}) {
       if(response.ok) {
         response.json()
         .then((json) => {
-          let msgsData = json.data
-
-          setMessages(json.data)
+          setMessages([...messages, ...json.data])
 
           if('included' in json) {
             console.log(json)
             console.log(json.included)
-            setMsgReactions(json.included)
+            setMsgReactions([...msgReactions, ...json.included])
           }
+          console.log(messages)
           console.log(msgReactions)
         })
 
@@ -116,10 +117,18 @@ function Chat({user, apiBaseUrl, cable}) {
     })
   }
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
   useEffect(() => {
     getChannel(channelId)
-    createSocket(channelId)
   }, [channelId]);
+
+  useEffect(() => {
+    createSocket(channelId)
+    scrollToBottom()
+  },[messages])
 
   return (
     <Container>
@@ -143,6 +152,7 @@ function Chat({user, apiBaseUrl, cable}) {
           messages.length > 0 &&
           messages.map((data, index) => {
             return <ChatMessage
+              key={"message_" + channelId + "_" + data.id}
               id={data.id}
               text={data.attributes.body}
               name={data.attributes.author_name}
@@ -155,6 +165,8 @@ function Chat({user, apiBaseUrl, cable}) {
             />
           })
         }
+
+        <div ref={messagesEndRef} />
       </ChatContainer>
 
       <ChatInput sendMessage={sendMessage} />

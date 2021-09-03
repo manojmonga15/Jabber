@@ -16,7 +16,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
     setSelectedReactions(reactionsData)
   }
 
-  const createReactionsSocket = (id) => {
+  const createReactionsSocket = (id, cable) => {
     setReactions(cable.subscriptions.create(
       {
         channel: "ReactionsChannel",
@@ -70,8 +70,8 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
 
   useEffect(() => {
     getMessageReactions(reactionsData)
-    createReactionsSocket(id)
-  }, [id, reactionsData]);
+    createReactionsSocket(id, cable, updateReactions)
+  }, [id, cable, reactionsData]);
 
   return (
     <Container>
@@ -90,7 +90,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
         <Reactions>
         {
           selectedReactions.map((reaction) => {
-            return <EmojiCounter>
+            return <EmojiCounter key={"reaction_" + id + "_" + reaction.attributes.emoji}>
                       <Emoji emoji={reaction.attributes.emoji} size={16} onClick={(emoji, event) => {ToggleReaction(emoji)}} />
                       <Count>{reaction.attributes.count}</Count>
                    </EmojiCounter>

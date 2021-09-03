@@ -11,4 +11,15 @@ class User < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :reactions, dependent: :destroy
   has_one_attached :avatar
+
+  after_create_commit :add_to_public_channels
+
+  def public_channels
+    Channel.public_channels
+  end
+
+  private
+  def add_to_public_channels
+    channels = public_channels
+  end
 end

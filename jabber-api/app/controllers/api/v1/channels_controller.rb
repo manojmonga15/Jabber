@@ -2,6 +2,7 @@ class Api::V1::ChannelsController < ApplicationController
 
   def index
     @channels = current_user.channels.all
+    # @channels += Channel.public_channels
 
     render jsonapi: @channels, fields: {channels: [:id, :title, :desc, :private]}
   end

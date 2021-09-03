@@ -6,7 +6,6 @@ function Signup({setUser, apiBaseUrl}) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [cpassword, setCPassword] = useState("")
-  const [image, setImage] = useState("")
 
   const register = (e) => {
     e.preventDefault()
@@ -268,12 +267,6 @@ const AlternativeRuler = styled.div`
   div {
     padding: 0 20px;
   }
-`
-
-const LabelField = styled.label`
-  margin-bottom: 0;
-  font-size: 14px;
-  font-weight: 500;
 `
 
 const SignInHelpLink = styled.p`

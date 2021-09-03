@@ -14,7 +14,7 @@ function Header({user, signOut, apiBaseUrl, setUser}) {
 
   const CustomToggle = React.forwardRef(({ children, onClick }, ref) => (
     <a
-      class="custom-toggle"
+      className="custom-toggle"
       href=""
       ref={ref}
       onClick={(e) => {
@@ -112,7 +112,7 @@ function Header({user, signOut, apiBaseUrl, setUser}) {
           <Modal.Body>
             <Form>
               <ModalContainer>
-                <Form.Group class="profile-form-group">
+                <Form.Group className="profile-form-group">
                   <Form.Group className="mb-3" >
                     <Form.Label>Full name</Form.Label>
                     <Form.Control
