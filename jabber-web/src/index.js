@@ -6,8 +6,9 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const CABLE_URL = process.env.REACT_APP_CABLE_URL || 'ws://localhost:3001/cable'
 const CableApp = {}
-CableApp.cable = actioncable.createConsumer('ws://localhost:3001/cable')
+CableApp.cable = actioncable.createConsumer(CABLE_URL)
 
 ReactDOM.render(
   <React.StrictMode>
