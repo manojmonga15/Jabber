@@ -8,7 +8,8 @@ class Api::V1::ChannelsController < ApplicationController
   end
 
   def show
-    render jsonapi: Channel.find(params[:id])
+    @channel = Channel.includes(:users).find params[:id]
+    render jsonapi: @channel, include: :users
   end
 
   def create

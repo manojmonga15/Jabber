@@ -4,6 +4,7 @@ import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import ChatInput from './ChatInput'
 import ChatMessage from './ChatMessage'
 import {useParams} from 'react-router-dom'
+import {Image} from 'react-bootstrap'
 
 function Chat({user, apiBaseUrl, cable}) {
 
@@ -12,7 +13,9 @@ function Chat({user, apiBaseUrl, cable}) {
   const [messages, setMessages] = useState([])
   const [chats, setChats] = useState([])
   const [msgReactions, setMsgReactions] = useState([])
+  const [members, setMembers] = useState([])
   const messagesEndRef = useRef(null)
+  const msgCounter = Array(3).fill(1)
 
   const createSocket = (channelId) => {
     setChats(cable.subscriptions.create(
@@ -36,8 +39,6 @@ function Chat({user, apiBaseUrl, cable}) {
 
   const updateMessages = (message) => {
     let messageLog = messages
-    console.log(messages)
-    console.log(message)
     if(!messageLog.some((item) => item.id === message.id))
       messageLog.push(message)
     setMessages(messageLog)
@@ -95,7 +96,7 @@ function Chat({user, apiBaseUrl, cable}) {
   }
 
   const getChannel = (channelId) => {
-    fetch(apiBaseUrl + "/channels/" + channelId, {
+    fetch(apiBaseUrl + "/channels/" + channelId + "?include=members", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +108,15 @@ function Chat({user, apiBaseUrl, cable}) {
       if(response.ok) {
         response.json()
         .then((json) => {
-          setChannel({id: json.data.id, name: json.data.attributes.title, desc: json.data.attributes.desc, private: json.data.attributes.private})
+          setChannel(
+            {
+              id: json.data.id,
+              name: json.data.attributes.title,
+              desc: json.data.attributes.desc,
+              private: json.data.attributes.private,
+              members: ("included" in json) ? json.included : []
+            }
+          )
           getMessages(channelId)
         })
       }
@@ -142,8 +151,27 @@ function Chat({user, apiBaseUrl, cable}) {
           </ChannelDesc>
         </Channel>
         <Details>
-          <div>Details</div>
-          <InfoIcon />
+          <MembersButton>
+            <MembersStack>
+              {
+                channel.members &&
+                msgCounter.map((data, index) => {
+                  let member = channel.members[index].attributes
+                  console.log(data + "_" + index)
+                  return (
+                    <MemberIcon className={"member-" + index}>
+                      <Image
+                        src={member.avatar ? member.avatar : "https://i.imgur.com/6VBx3io.png"}
+                        alt={member.name[0]}
+                        thumbnail
+                      />
+                    </MemberIcon>
+                  )
+                })
+              }
+              <MembersCount>{channel.members ? channel.members.length : 0}</MembersCount>
+            </MembersStack>
+          </MembersButton>
         </Details>
       </ChatHeader>
 
@@ -203,6 +231,9 @@ const Details = styled.div`
   display: flex;
   align-items: center;
   color: #606060;
+  flex: 0 0 auto;
+  margin-left: auto;
+  z-index: 0;
 `
 
 const InfoIcon = styled(InfoOutlinedIcon)`
@@ -214,4 +245,46 @@ const ChannelDesc = styled.div`
   color: #606060;
   font-size: 13px;
   margin-top: 8px;
+`
+const MembersButton = styled.button`
+  background: none;
+  padding: 3px;
+  border-radius: 4px;
+  height: 36px;
+  width: 86px;
+`
+
+const MembersStack = styled.div`
+  align-items: center;
+  display: flex;
+  height: 22px;
+  margin-bottom: 2px;
+
+  .member-0 {
+    z-index: 3;
+  }
+  .member-1 {
+    z-index: 2;
+  }
+  .member-2 {
+    z-index: 1;
+  }
+`
+
+const MemberIcon = styled.span`
+  margin-right: -4px;
+  border-radius: 3px;
+  width: 22px;
+
+  .img-thumbnail {
+    width: 22px;
+    padding: 0;
+  }
+`
+
+const MembersCount = styled.span`
+  width: 18px;
+  margin-left: 4px;
+  z-index: 4;
+  font-size: 14px;
 `
