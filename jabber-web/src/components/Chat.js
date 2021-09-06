@@ -15,7 +15,7 @@ function Chat({user, apiBaseUrl, cable}) {
   const [msgReactions, setMsgReactions] = useState([])
   const [members, setMembers] = useState([])
   const messagesEndRef = useRef(null)
-  const [msgCounter, setMsgCounter] = useState(Array(3).fill(1))
+  const [msgCounter, setMsgCounter] = useState([1, 1, 1])
 
   const createSocket = (channelId) => {
     setChats(cable.subscriptions.create(
@@ -80,15 +80,16 @@ function Chat({user, apiBaseUrl, cable}) {
       if(response.ok) {
         response.json()
         .then((json) => {
-          setMessages([...messages, ...json.data])
-
-          if('included' in json) {
-            console.log(json)
-            console.log(json.included)
-            setMsgReactions([...msgReactions, ...json.included])
+          if(messages.length > 0 && messages[0].messageable_id === channelId) {
+            setMessages([...messages, ...json.data])
+            if('included' in json)
+              setMsgReactions([...json.included])
           }
-          console.log(messages)
-          console.log(msgReactions)
+          else{
+            setMessages(json.data)
+            if('included' in json)
+              setMsgReactions([...json.included])
+          }
         })
 
       }
@@ -118,8 +119,11 @@ function Chat({user, apiBaseUrl, cable}) {
             }
           )
 
-          if(("included" in json) && json.included.length < 3)
+          console.log("outside condition");
+          if(("included" in json) && json.included.length < 3) {
+            console.log(json.included.length)
             setMsgCounter(Array(json.included.length).fill(1))
+          }
 
           getMessages(channelId)
         })
@@ -136,6 +140,8 @@ function Chat({user, apiBaseUrl, cable}) {
 
   useEffect(() => {
     getChannel(channelId)
+    createSocket(channelId)
+    scrollToBottom()
   }, [channelId]);
 
   useEffect(() => {
@@ -160,17 +166,22 @@ function Chat({user, apiBaseUrl, cable}) {
               {
                 channel.members &&
                 msgCounter.map((data, index) => {
-                  let member = channel.members[index].attributes
-                  console.log(data + "_" + index)
-                  return (
-                    <MemberIcon className={"member-" + index}>
-                      <Image
-                        src={member.avatar ? member.avatar : "https://i.imgur.com/6VBx3io.png"}
-                        alt={member.name[0]}
-                        thumbnail
-                      />
-                    </MemberIcon>
-                  )
+                  if(channel.members.length > index) {
+                    let member = channel.members[index].attributes
+                    console.log(data + "_" + index)
+                    return (
+                      <MemberIcon key={"channel_"+channelId+"_member-"+index} className={"member-" + index}>
+                        <Image
+                          src={member.avatar ? member.avatar : "https://i.imgur.com/6VBx3io.png"}
+                          alt={member.name[0]}
+                          thumbnail
+                        />
+                      </MemberIcon>
+                    )
+                  }
+                  else {
+                    return ""
+                  }
                 })
               }
               <MembersCount>{channel.members ? channel.members.length : 0}</MembersCount>
