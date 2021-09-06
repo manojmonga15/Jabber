@@ -15,7 +15,7 @@ function Chat({user, apiBaseUrl, cable}) {
   const [msgReactions, setMsgReactions] = useState([])
   const [members, setMembers] = useState([])
   const messagesEndRef = useRef(null)
-  const msgCounter = Array(3).fill(1)
+  const [msgCounter, setMsgCounter] = useState(Array(3).fill(1))
 
   const createSocket = (channelId) => {
     setChats(cable.subscriptions.create(
@@ -117,6 +117,10 @@ function Chat({user, apiBaseUrl, cable}) {
               members: ("included" in json) ? json.included : []
             }
           )
+
+          if(("included" in json) && json.included.length < 3)
+            setMsgCounter(Array(json.included.length).fill(1))
+
           getMessages(channelId)
         })
       }
