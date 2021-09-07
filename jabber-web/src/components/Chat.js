@@ -4,9 +4,12 @@ import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import ChatInput from './ChatInput'
 import ChatMessage from './ChatMessage'
 import {useParams} from 'react-router-dom'
-import {Image} from 'react-bootstrap'
+import {Image, Modal, Button, Tabs, Tab} from 'react-bootstrap'
+import LockIcon from '@material-ui/icons/Lock'
+import PersonAddOutlinedIcon from '@material-ui/icons/PersonAddOutlined'
+import AddMembersModal from './modals/AddMembersModal'
 
-function Chat({user, apiBaseUrl, cable}) {
+function Chat({user, apiBaseUrl, cable, users}) {
 
   let {channelId} = useParams()
   const [channel, setChannel] = useState([])
@@ -16,6 +19,10 @@ function Chat({user, apiBaseUrl, cable}) {
   const [members, setMembers] = useState([])
   const messagesEndRef = useRef(null)
   const [msgCounter, setMsgCounter] = useState([1, 1, 1])
+  const [membersModalShow, setMembersModalShow] = useState(false)
+  const [addMemberShow, setAddMemberShow] = useState(false)
+  const [allUsers, setAllUsers] = useState([])
+  const [selectedUsers, setSelectedUsers] = useState([])
 
   const createSocket = (channelId) => {
     setChats(cable.subscriptions.create(
@@ -109,20 +116,31 @@ function Chat({user, apiBaseUrl, cable}) {
       if(response.ok) {
         response.json()
         .then((json) => {
-          setChannel(
-            {
-              id: json.data.id,
-              name: json.data.attributes.title,
-              desc: json.data.attributes.desc,
-              private: json.data.attributes.private,
-              members: ("included" in json) ? json.included : []
-            }
-          )
+          let channelData = {
+            id: json.data.id,
+            name: json.data.attributes.title,
+            desc: json.data.attributes.desc,
+            private: json.data.attributes.private,
+            members: ("included" in json) ?
+              json.included.map((doc) => {
+                return {
+                  id: doc.id,
+                  name: doc.attributes.name,
+                  email: doc.attributes.email,
+                  status: doc.attributes.bio,
+                  avatar: doc.attributes.avatar
+                }
+              }) : []
+          }
 
-          console.log("outside condition");
-          if(("included" in json) && json.included.length < 3) {
-            console.log(json.included.length)
-            setMsgCounter(Array(json.included.length).fill(1))
+          setChannel(channelData)
+
+          if("included" in json) {
+            if(json.included.length <= 3)
+              setMsgCounter(Array(json.included.length).fill(1))
+
+            let allMembers = users.filter((usr) => !channelData.members.some((mem) => mem.id === usr.id))
+            setAllUsers(allMembers)
           }
 
           getMessages(channelId)
@@ -139,6 +157,7 @@ function Chat({user, apiBaseUrl, cable}) {
   }
 
   useEffect(() => {
+    setAllUsers([...users])
     getChannel(channelId)
     createSocket(channelId)
     scrollToBottom()
@@ -154,21 +173,21 @@ function Chat({user, apiBaseUrl, cable}) {
       <ChatHeader>
         <Channel>
           <ChannelName>
-            # {channel.name}
+            {channel.private ? <LockIcon className="channel-icon" /> : <span className="channel-icon">#</span>}
+            <span>{channel.name}</span>
           </ChannelName>
           <ChannelDesc>
             {channel.desc || "Some description about the channel."}
           </ChannelDesc>
         </Channel>
         <Details>
-          <MembersButton>
+          <MembersButton onClick={(e) => setMembersModalShow(true)}>
             <MembersStack>
               {
                 channel.members &&
                 msgCounter.map((data, index) => {
                   if(channel.members.length > index) {
-                    let member = channel.members[index].attributes
-                    console.log(data + "_" + index)
+                    let member = channel.members[index]
                     return (
                       <MemberIcon key={"channel_"+channelId+"_member-"+index} className={"member-" + index}>
                         <Image
@@ -213,6 +232,76 @@ function Chat({user, apiBaseUrl, cable}) {
       </ChatContainer>
 
       <ChatInput sendMessage={sendMessage} />
+
+      <Modal
+        show={membersModalShow}
+        onHide={() => setMembersModalShow(false)}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            {channel.private ? <LockIcon className="channel-icon" /> : <span className="channel-icon">#</span>}
+            <span>{channel.name}</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Tabs defaultActiveKey="members" id="channel-modal-tabs" className="mb-3">
+            <Tab eventKey="about" title="About">
+              <div>{channel.desc}</div>
+            </Tab>
+            <Tab eventKey="members" title="Members">
+              <MembersContainer>
+                {
+                  channel.private ?
+                     <AddMemberButton onClick={(e) => setAddMemberShow(true)}>
+                      <AddMemberIcon>
+                        <PersonAddOutlinedIcon />
+                      </AddMemberIcon>
+                      <AddMemberText>Add people</AddMemberText>
+                    </AddMemberButton>
+                    :
+                    ""
+                }
+
+                <MembersList>
+                {
+                  channel.members && channel.members.map((member) => {
+                    return (
+                      <Member key={"channel-" + channelId + "-member-" + member.id}>
+                        <Image
+                          src={member.avatar ? member.avatar : "https://i.imgur.com/6VBx3io.png"}
+                          alt={member.name[0]}
+                          thumbnail
+                        />
+                        <MemberName>{member.name}</MemberName>
+                      </Member>
+                    )
+                  })
+                }
+                </MembersList>
+              </MembersContainer>
+            </Tab>
+            <Tab eventKey="settings" title="Settngs" >
+
+            </Tab>
+          </Tabs>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => setMembersModalShow(false)}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+      <AddMembersModal
+        addMemberShow={addMemberShow}
+        setAddMemberShow={setAddMemberShow}
+        allUsers={allUsers}
+        selectedUsers={selectedUsers}
+        setSelectedUsers={setSelectedUsers}
+        apiBaseUrl={apiBaseUrl}
+        channelId={channelId}
+        user={user}
+      />
     </Container>
   )
 }
@@ -241,6 +330,10 @@ const Channel = styled.div`
 `
 const ChannelName = styled.div`
   font-weight: 700;
+
+  svg {
+    font-size: 1rem;
+  }
 `
 const Details = styled.div`
   display: flex;
@@ -303,3 +396,40 @@ const MembersCount = styled.span`
   z-index: 4;
   font-size: 14px;
 `
+
+const MembersContainer = styled.div`
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+`
+const MembersList = styled.div``
+const Member = styled.div`
+  display: flex;
+  flex-direction: row;
+  height: 36px;
+  align-items: center;
+
+  .img-thumbnail {
+    width: 36px;
+  }
+`
+const MemberName = styled.div`
+  margin-left: 10px;
+`
+const AddMemberButton = styled.a`
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  cursor: pointer;
+  height: 40px;
+  text-decoration: none;
+`
+const AddMemberIcon = styled.div`
+  height: 36px;
+  width: 36px;
+  background: rgba(29,155,209,.1);
+  margin-right: 10px;
+  padding: 6px;
+  border-radius: 0.25rem;
+`
+const AddMemberText = styled.div``

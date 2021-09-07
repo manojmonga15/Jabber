@@ -4,7 +4,9 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
   def render_jsonapi_response(resource)
-    if resource.errors.empty?
+    if !resource.respond_to? :errors
+      render jsonapi: resource
+    elsif resource.errors.empty?
       render jsonapi: resource
     else
       render jsonapi_errors: resource.errors, status: 400

@@ -1,10 +1,13 @@
 import React, {useState} from 'react'
 import styled from 'styled-components'
-import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import { sidebarItems } from '../data/SidebarData'
-import AddIcon from '@material-ui/icons/Add';
+import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline'
+//import { sidebarItems } from '../data/SidebarData'
+import AddIcon from '@material-ui/icons/Add'
+import LockIcon from '@material-ui/icons/Lock'
 import {useHistory} from 'react-router-dom'
-import { Form, Button, Modal } from 'react-bootstrap';
+import { Form, Button, Modal } from 'react-bootstrap'
+import AddMembersModal from './modals/AddMembersModal'
+
 
 function Siderbar(props) {
 
@@ -13,6 +16,9 @@ function Siderbar(props) {
   const [title, setTitle] = useState("")
   const [desc, setDesc] = useState("")
   const [isPrivate, setIsPrivate] = useState(false)
+  const [addMemberShow, setAddMemberShow] = useState(false)
+  const [selectedUsers, setSelectedUsers] = useState([])
+  const [newChannelId, setNewChannelId] = useState(null)
 
   const addChannel = (e) => {
     e.preventDefault()
@@ -35,9 +41,16 @@ function Siderbar(props) {
       if(response.ok) {
         setTitle("")
         setDesc("")
-        setIsPrivate(false)
         setModalShow(false)
-        alert("Channel Added!")
+        response.json()
+        .then((json) => {
+          setNewChannelId(json.data.id)
+
+          if(isPrivate) {
+            setAddMemberShow(true)
+          }
+        })
+        setIsPrivate(false)
       }
     })
   }
@@ -58,35 +71,38 @@ function Siderbar(props) {
           <AddCircleOutlineIcon />
         </NewMessage>
       </WorkspaceContainer>
-      <MainChannels>
-        {
-          sidebarItems.map(item => (
-            <MainChannelItem key={"sidebar_" + item.id}>
-              {item.icon}
-              {item.text}
-            </MainChannelItem>
-          ))
-        }
-
-      </MainChannels>
-
-      <ChannelsContainer>
-        <NewChannelContainer>
-          <div>
-            Channels
-          </div>
-          <AddIcon onClick={() => setModalShow(true)} />
-        </NewChannelContainer>
-        <ChannelsList>
-          {
-            props.rooms.map(item => (
-              <Channel key={"channels_" + item.id} onClick={() => goToChannel(item.id)}>
-                # {item.name}
-              </Channel>
-            ))
+      <WorkspaceContents>
+        <MainChannels>
+          {/*
+            sidebarItems.map(item => (
+              <MainChannelItem key={"sidebar_" + item.id}>
+                {item.icon}
+                {item.text}
+              </MainChannelItem>
+            ))*/
           }
-        </ChannelsList>
-      </ChannelsContainer>
+
+        </MainChannels>
+
+        <ChannelsContainer>
+          <NewChannelContainer>
+            <div>
+              Channels
+            </div>
+            <AddIcon onClick={() => setModalShow(true)} />
+          </NewChannelContainer>
+          <ChannelsList>
+            {
+              props.rooms.map(item => (
+                <Channel key={"channels_" + item.id} onClick={() => goToChannel(item.id)}>
+                  {item.private ? <LockIcon className="channel-icon" /> : <span className="channel-icon">#</span>}
+                  <span>{item.name}</span>
+                </Channel>
+              ))
+            }
+          </ChannelsList>
+        </ChannelsContainer>
+      </WorkspaceContents>
       <Form>
         <Modal
             show={modalShow}
@@ -122,6 +138,17 @@ function Siderbar(props) {
             </Modal.Footer>
           </Modal>
         </Form>
+
+        <AddMembersModal
+          addMemberShow={addMemberShow}
+          setAddMemberShow={setAddMemberShow}
+          allUsers={props.users}
+          selectedUsers={selectedUsers}
+          setSelectedUsers={setSelectedUsers}
+          apiBaseUrl={props.apiBaseUrl}
+          channelId={newChannelId}
+          user={props.user}
+        />
     </Container>
   )
 }
@@ -142,6 +169,10 @@ const WorkspaceContainer = styled.div`
   justify-content: space-between;
   /* border-bottom: 1px solid #532753; */
   border-bottom: 1px solid #40808A;
+`
+
+const WorkspaceContents = styled.div`
+  overflow-y: scroll;
 `
 
 const Name = styled.div``
@@ -203,6 +234,17 @@ const Channel = styled.div`
   align-items: center;
   padding-left: 19px;
   cursor: pointer;
+
+  .channel-icon {
+    font-size: 14px;
+    margin-right: 3px;
+  }
+
+  span.channel-icon {
+    font-weight: 800;
+    width: 14px;
+    text-align: center;
+  }
 
   :hover {
     /* background: #350D36; */

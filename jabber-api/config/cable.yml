@@ -5,6 +5,6 @@ test:
   adapter: test
 
 production:
-  adapter: async
-  # url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
-  # channel_prefix: jabber_api_production
+  adapter: redis
+  url: redis://redistogo:2c0e59e783cce060223a73e2a53691b3@sole.redistogo.com:9665/
+  channel_prefix: jabber_api_production

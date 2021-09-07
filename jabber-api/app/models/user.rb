@@ -12,6 +12,8 @@ class User < ApplicationRecord
   has_many :reactions, dependent: :destroy
   has_one_attached :avatar
 
+  scope :all_except, -> (uid) { where.not id: uid }
+
   after_create_commit :add_to_public_channels
 
   def public_channels

@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import Chat from './components/Chat'
 import Login from './components/Login'
@@ -12,8 +12,11 @@ function App(props) {
 
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')))
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] =useState(false)
   //const [message, setMessage] = useState()
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'
+  const mountedRef = useRef(true)
 
   const getChannels = () => {
     fetch(API_BASE_URL + "/channels", {
@@ -31,6 +34,37 @@ function App(props) {
           setRooms(json.data.map((doc) => {
             return {id: doc.id, name: doc.attributes.title, private: doc.attributes.private}
           }))
+        })
+      }
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+  }
+
+  const getUsers = () => {
+    fetch(API_BASE_URL + "/users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": user.token
+      }
+    })
+    .then((response) => {
+      if(response.ok) {
+        response.json()
+        .then((json) => {
+          setUsers(json.data.map((doc) => {
+            return {
+              id: doc.id,
+              name: doc.attributes.name,
+              email: doc.attributes.email,
+              status: doc.attributes.bio,
+              avatar: doc.attributes.avatar
+            }
+          }))
+          setLoading(false)
         })
       }
     })
@@ -57,8 +91,12 @@ function App(props) {
   }
 
   useEffect(() => {
-    if(user)
-      getChannels();
+    if(user) {
+      setLoading(true)
+      getChannels()
+      getUsers()
+      return () => { mountedRef.current = false }
+    }
   }, [])
 
   return (
@@ -80,17 +118,22 @@ function App(props) {
           :
           <Container>
             <Header signOut={signOut} user={user} apiBaseUrl={API_BASE_URL} setUser={setUser} />
-            <Main>
-              <Sidebar rooms={rooms} apiBaseUrl={API_BASE_URL} user={user} />
-              <Switch>
-                <Route path="/room/:channelId">
-                  <Chat user={user} apiBaseUrl={API_BASE_URL} cable={props.cable} />
-                </Route>
-                <Route path="/">
-                  Select or Create Channel
-                </Route>
-              </Switch>
-            </Main>
+            {
+              !loading ?
+                <Main>
+                  <Sidebar rooms={rooms} apiBaseUrl={API_BASE_URL} user={user} users={users} />
+                  <Switch>
+                    <Route path="/room/:channelId">
+                      <Chat user={user} apiBaseUrl={API_BASE_URL} cable={props.cable} users={users} />
+                    </Route>
+                    <Route path="/">
+                      Select or Create Channel
+                    </Route>
+                  </Switch>
+                </Main>
+              :
+                <Loader>Building your Jabber workplace</Loader>
+            }
           </Container>
         }
 
@@ -112,3 +155,5 @@ const Main = styled.div`
   display: grid;
   grid-template-columns: 260px auto;
 `
+
+const Loader = styled.div``

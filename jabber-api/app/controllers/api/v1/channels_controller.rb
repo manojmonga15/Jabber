@@ -1,7 +1,7 @@
 class Api::V1::ChannelsController < ApplicationController
-
+  before_action :get_channel, only: [:messages, :add_users]
   def index
-    @channels = current_user.channels.all
+    @channels = current_user.channels.order('private DESC')
     # @channels += Channel.public_channels
 
     render jsonapi: @channels, fields: {channels: [:id, :title, :desc, :private]}
@@ -24,14 +24,22 @@ class Api::V1::ChannelsController < ApplicationController
   end
 
   def messages
-    @channel = Channel.find params[:id]
     @messages = @channel.messages.includes(:author, :reaction_counts)
 
     render jsonapi: @messages, include: :reaction_counts
   end
 
+  def add_users
+    @users = User.find params[:users]
+    @channel.users << @users
+  end
+
   private
   def channel_params
    params.require(:channel).permit(:title, :desc, :private, :created_by)
+  end
+
+  def get_channel
+    @channel = Channel.find params[:id]
   end
 end

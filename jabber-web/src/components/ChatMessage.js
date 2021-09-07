@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import styled from 'styled-components'
 import 'emoji-mart/css/emoji-mart.css';
 import { Picker, Emoji } from 'emoji-mart';
@@ -11,6 +11,7 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
   const [reactionShown, setReactionShown] = useState(false)
   const [selectedReactions, setSelectedReactions] = useState([])
   const [reactions, setReactions] = useState([])
+  const mountedRef = useRef(true)
 
   const getMessageReactions = (reactionsData) => {
     setSelectedReactions(reactionsData)
@@ -30,7 +31,6 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
           console.log("---DISCONNECTED---");
         },
         received: (data) => {
-          console.log(data)
           updateReactions(data)
         }
       }
@@ -71,6 +71,8 @@ function ChatMessage({id, text, name, image, timestamp, apiBaseUrl, user, cable,
   useEffect(() => {
     getMessageReactions(reactionsData)
     createReactionsSocket(id, cable, updateReactions)
+
+    return () => { mountedRef.current = false }
   }, [id, cable, reactionsData]);
 
   return (
