@@ -11,7 +11,9 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def update
-    @user.update! user_params
+    update_params = user_params
+    update_params.delete :avatar if update_params[:avatar] == "null"
+    @user.update! update_params
     render_jsonapi_response(@user)
   end
 

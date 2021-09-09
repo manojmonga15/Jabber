@@ -37,6 +37,6 @@ class Message < ApplicationRecord
 
   def author_avatar
     author.avatar.attached? ?
-      Rails.application.routes.url_helpers.rails_blob_url(author.avatar) : ""
+      Rails.application.routes.url_helpers.url_for(author.avatar) : ""
   end
 end

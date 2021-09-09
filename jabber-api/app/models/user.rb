@@ -22,6 +22,6 @@ class User < ApplicationRecord
 
   private
   def add_to_public_channels
-    channels = public_channels
+    channels << public_channels
   end
 end

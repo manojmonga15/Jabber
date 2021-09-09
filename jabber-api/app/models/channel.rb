@@ -13,7 +13,6 @@ class Channel < ApplicationRecord
   private
   def add_all_users
     self.users = User.all
-    puts users
     self.save
   end
 end

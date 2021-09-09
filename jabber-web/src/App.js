@@ -13,7 +13,8 @@ function App(props) {
   const [rooms, setRooms] = useState([])
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')))
   const [users, setUsers] = useState([])
-  const [loading, setLoading] =useState(false)
+  const [loading, setLoading] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(!!user)
   //const [message, setMessage] = useState()
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'
   const mountedRef = useRef(true)
@@ -86,6 +87,7 @@ function App(props) {
       if(response.ok) {
         localStorage.removeItem('user')
         setUser(null)
+        setLoggedIn(false)
       }
     })
   }
@@ -97,7 +99,7 @@ function App(props) {
       getUsers()
       return () => { mountedRef.current = false }
     }
-  }, [])
+  }, [loggedIn])
 
   return (
     <div className="App">
@@ -112,7 +114,7 @@ function App(props) {
               <Signup setUser={setUser} apiBaseUrl={API_BASE_URL} />
             </Route>
             <Route path="/">
-              <Login setUser={setUser} apiBaseUrl={API_BASE_URL} />
+              <Login setUser={setUser} apiBaseUrl={API_BASE_URL} setLoggedIn={setLoggedIn} />
             </Route>
           </Switch>
           :

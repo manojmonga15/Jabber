@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import styled from 'styled-components'
 
-function Login({setUser, apiBaseUrl}) {
+function Login({setUser, apiBaseUrl, setLoggedIn}) {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -40,6 +40,7 @@ function Login({setUser, apiBaseUrl}) {
 
           setUser(newUser)
           localStorage.setItem('user', JSON.stringify(newUser))
+          setLoggedIn(true)
         })
       }
     })

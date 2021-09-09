@@ -4,7 +4,7 @@ class SerializableUser < JSONAPI::Serializable::Resource
   attributes :email, :name, :image, :bio
   attribute :avatar do
     if @object.avatar.attached?
-      @url_helpers.rails_blob_url @object.avatar
+      @url_helpers.url_for @object.avatar
     end
   end
 

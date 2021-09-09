@@ -11,7 +11,7 @@ class SerializableMessage < JSONAPI::Serializable::Resource
   end
   attribute :author_avatar do
     if @object.author.avatar.attached?
-      @url_helpers.rails_blob_url @object.author.avatar
+      @url_helpers.url_for @object.author.avatar
     end
   end
 
